@@ -17,19 +17,23 @@ interface EngagementSectionProps {
 }
 
 export function EngagementSection({ articleId, initialLikes }: EngagementSectionProps) {
+  // Initialize isLiked from localStorage directly in the state initializer
   const [likes, setLikes] = useState(initialLikes);
-  const [isLiked, setIsLiked] = useState(false); // In a real app, this would be determined by user session
+  const [isLiked, setIsLiked] = useState(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return false;
+    try {
+      const likedArticles = JSON.parse(localStorage.getItem('likedArticles') || '[]');
+      return likedArticles.includes(articleId);
+    } catch {
+      return false;
+    }
+  });
   const [comment, setComment] = useState('');
   const [comments, setComments] = useState<Comment[]>([]);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    // Check local storage to see if the user has already liked this article
-    const likedArticles = JSON.parse(localStorage.getItem('likedArticles') || '[]');
-    if (likedArticles.includes(articleId)) {
-      
-    }
-
     // Fetch initial comments
     startTransition(async () => {
         const result = await getComments(articleId);
@@ -48,8 +52,12 @@ export function EngagementSection({ articleId, initialLikes }: EngagementSection
         setLikes(result.likes);
         setIsLiked(true);
         // Store liked state in local storage
-        const likedArticles = JSON.parse(localStorage.getItem('likedArticles') || '[]');
-        localStorage.setItem('likedArticles', JSON.stringify([...likedArticles, articleId]));
+        try {
+          const likedArticles = JSON.parse(localStorage.getItem('likedArticles') || '[]');
+          localStorage.setItem('likedArticles', JSON.stringify([...likedArticles, articleId]));
+        } catch (error) {
+          console.error('Error saving liked article to localStorage:', error);
+        }
       }
     });
   };
@@ -68,15 +76,20 @@ export function EngagementSection({ articleId, initialLikes }: EngagementSection
     });
   };
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: document.title,
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert('Link copied to clipboard!');
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: document.title,
+          url: window.location.href,
+        });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+      }
+    } catch (error) {
+      // User cancelled share or clipboard access denied
+      console.error('Share failed:', error);
     }
   };
 
@@ -88,7 +101,7 @@ export function EngagementSection({ articleId, initialLikes }: EngagementSection
           disabled={isLiked || isPending}
           className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
             isLiked 
-              ? 'bg-red-50 text-red-600 border border-red-100' 
+              ? 'bg-blue-50 text-blue-600 border border-blue-100' 
               : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 disabled:opacity-50'
           }`}
           aria-label={isLiked ? 'You have liked this article' : 'Like this article'}
@@ -119,13 +132,13 @@ export function EngagementSection({ articleId, initialLikes }: EngagementSection
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Join the conversation..."
-            className="flex-1 px-4 py-3 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="flex-1 px-4 py-3 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Write a comment"
           />
           <button
             type="submit"
             disabled={!comment.trim() || isPending}
-            className="bg-slate-900 text-white px-5 rounded-lg font-medium transition-colors hover:bg-slate-800 disabled:opacity-50"
+            className="bg-blue-700 text-white px-5 rounded-lg font-medium transition-colors hover:bg-blue-800 disabled:opacity-50"
             aria-label="Post comment"
           >
             {isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
@@ -136,10 +149,10 @@ export function EngagementSection({ articleId, initialLikes }: EngagementSection
             {comments.length > 0 ? comments.map((c) => (
               <div key={c.id} className="flex gap-3">
                 <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-500 shrink-0">
-                  {c.author[0]}
+                  {c.author?.[0] || 'A'}
                 </div>
                 <div>
-                  <p className="font-bold text-slate-800 text-sm">{c.author}</p>
+                  <p className="font-bold text-slate-800 text-sm">{c.author || 'Anonymous'}</p>
                   <p className="text-slate-600 text-sm">{c.content}</p>
                   <p className="text-xs text-slate-400 mt-1">{new Date(c.created_at).toLocaleString()}</p>
                 </div>

@@ -97,7 +97,7 @@ export default async function TeamPage() {
             {teamMembers.map((member: TeamMember | typeof defaultTeamMembers[0]) => {
               const initials = 'initials' in member 
                 ? member.initials 
-                : member.name.split(' ').map(n => n[0]).join('').toUpperCase();
+                : (member.name?.split(' ').map(n => n[0]).filter(Boolean).join('').toUpperCase() || 'N/A');
               
               return (
                 <div 

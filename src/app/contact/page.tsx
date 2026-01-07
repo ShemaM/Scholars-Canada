@@ -33,7 +33,8 @@ export default function ContactPage() {
       
       // Reset after 5 seconds
       setTimeout(() => setStatus('idle'), 5000);
-    } catch {
+    } catch (error) {
+      console.error('Contact form submission failed:', error);
       setStatus('error');
       setErrorMessage('Something went wrong. Please try again.');
     }

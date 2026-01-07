@@ -47,35 +47,43 @@ export default async function HomePage() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#f8fafc]">
+    <main className="min-h-screen" style={{ backgroundColor: 'var(--color-msnc-white, #F8F8F8)' }}>
       
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white py-24 overflow-hidden">
+      <section 
+        className="relative text-white py-24 overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, var(--color-msnc-navy, #0E4977) 0%, var(--color-msnc-royal, #097CDA) 100%)' }}
+      >
         <div className="absolute inset-0 bg-[url('/images/pattern.svg')] opacity-10"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <div className="flex justify-center mb-6">
-              <div className="h-16 w-16 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
-                <GraduationCap className="h-8 w-8 text-amber-400" />
+              <div 
+                className="h-16 w-16 rounded-full flex items-center justify-center backdrop-blur-sm"
+                style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+              >
+                <GraduationCap className="h-8 w-8" style={{ color: 'var(--color-msnc-yellow, #F7D116)' }} />
               </div>
             </div>
             <h1 className="text-4xl md:text-6xl font-serif font-black mb-6 leading-tight">
               Mulenge Scholars&apos; Network Canada
             </h1>
-            <p className="text-xl md:text-2xl text-blue-100 mb-8 leading-relaxed max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl mb-8 leading-relaxed max-w-3xl mx-auto" style={{ color: 'var(--color-msnc-sky, #99C7F1)' }}>
               Empowering Mulenge youth through mentorship, academic guidance, and leadership development
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 
                 href="/subscribe" 
-                className="inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-8 py-4 rounded-full text-lg transition-all shadow-lg hover:shadow-xl"
+                className="inline-flex items-center justify-center gap-2 font-bold px-8 py-4 rounded-full text-lg transition-all shadow-lg hover:shadow-xl"
+                style={{ backgroundColor: 'var(--color-msnc-yellow, #F7D116)', color: 'var(--color-msnc-navy, #0E4977)' }}
               >
                 Join Our Network
                 <ArrowRight className="h-5 w-5" />
               </Link>
               <Link 
                 href="/mission" 
-                className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-8 py-4 rounded-full text-lg transition-all backdrop-blur-sm"
+                className="inline-flex items-center justify-center gap-2 text-white font-bold px-8 py-4 rounded-full text-lg transition-all backdrop-blur-sm hover:bg-white/20"
+                style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
               >
                 Learn More
               </Link>
@@ -88,7 +96,7 @@ export default async function HomePage() {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <span className="text-blue-700 font-bold uppercase tracking-widest text-sm mb-4 block">Our Vision</span>
+            <span className="font-bold uppercase tracking-widest text-sm mb-4 block" style={{ color: 'var(--color-msnc-royal, #097CDA)' }}>Our Vision</span>
             <p className="text-2xl md:text-3xl font-serif text-slate-800 leading-relaxed italic">
               &quot;To build a united and empowered community where Mulenge youth discover their potential, 
               thrive academically and professionally, and grow into leaders who contribute meaningfully to society.&quot;
@@ -98,10 +106,10 @@ export default async function HomePage() {
       </section>
 
       {/* Objectives Grid */}
-      <section className="py-20 bg-slate-50">
+      <section className="py-20" style={{ backgroundColor: 'var(--color-msnc-white, #F8F8F8)' }}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <span className="text-blue-700 font-bold uppercase tracking-widest text-sm mb-4 block">What We Do</span>
+            <span className="font-bold uppercase tracking-widest text-sm mb-4 block" style={{ color: 'var(--color-msnc-royal, #097CDA)' }}>What We Do</span>
             <h2 className="text-4xl font-serif font-black text-slate-900 mb-4">Our Objectives</h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
               We are committed to supporting Mulenge youth across multiple dimensions of their development.
@@ -114,8 +122,11 @@ export default async function HomePage() {
                 key={index} 
                 className="bg-white p-8 rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group"
               >
-                <div className="h-12 w-12 bg-blue-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-blue-700 transition-colors">
-                  <objective.icon className="h-6 w-6 text-blue-700 group-hover:text-white transition-colors" />
+                <div 
+                  className="h-12 w-12 rounded-xl flex items-center justify-center mb-6 transition-colors"
+                  style={{ backgroundColor: 'var(--color-msnc-sky, #99C7F1)' }}
+                >
+                  <objective.icon className="h-6 w-6" style={{ color: 'var(--color-msnc-navy, #0E4977)' }} />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 mb-3">{objective.title}</h3>
                 <p className="text-slate-600 leading-relaxed">{objective.description}</p>
@@ -131,12 +142,13 @@ export default async function HomePage() {
           <div className="container mx-auto px-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
               <div>
-                <span className="text-blue-700 font-bold uppercase tracking-widest text-sm mb-2 block">Stay Connected</span>
+                <span className="font-bold uppercase tracking-widest text-sm mb-2 block" style={{ color: 'var(--color-msnc-royal, #097CDA)' }}>Stay Connected</span>
                 <h2 className="text-4xl font-serif font-black text-slate-900">Upcoming Events</h2>
               </div>
               <Link 
                 href="/events" 
-                className="mt-4 md:mt-0 text-blue-700 font-bold hover:text-blue-800 transition-colors inline-flex items-center gap-2"
+                className="mt-4 md:mt-0 font-bold transition-colors inline-flex items-center gap-2 hover:opacity-80"
+                style={{ color: 'var(--color-msnc-royal, #097CDA)' }}
               >
                 View All Events <ArrowRight className="h-4 w-4" />
               </Link>
@@ -147,10 +159,11 @@ export default async function HomePage() {
                 <Link 
                   key={event.id} 
                   href={`/events/${event.slug}`}
-                  className="group bg-slate-50 rounded-2xl overflow-hidden hover:shadow-lg transition-all border border-slate-100"
+                  className="group rounded-2xl overflow-hidden hover:shadow-lg transition-all border border-slate-100"
+                  style={{ backgroundColor: 'var(--color-msnc-white, #F8F8F8)' }}
                 >
                   <div className="p-6">
-                    <div className="flex items-center gap-2 text-blue-700 text-sm font-bold mb-3">
+                    <div className="flex items-center gap-2 text-sm font-bold mb-3" style={{ color: 'var(--color-msnc-royal, #097CDA)' }}>
                       <Calendar className="h-4 w-4" />
                       {new Date(event.event_date).toLocaleDateString('en-CA', { 
                         month: 'long', 
@@ -158,7 +171,7 @@ export default async function HomePage() {
                         year: 'numeric' 
                       })}
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-blue-700 transition-colors">
+                    <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:opacity-80 transition-colors">
                       {event.title}
                     </h3>
                     <p className="text-slate-600 mb-4 line-clamp-2">{event.description}</p>
@@ -184,16 +197,17 @@ export default async function HomePage() {
 
       {/* Latest Announcements - Dynamic */}
       {announcements && announcements.length > 0 && (
-        <section className="py-20 bg-slate-50">
+        <section className="py-20" style={{ backgroundColor: 'var(--color-msnc-white, #F8F8F8)' }}>
           <div className="container mx-auto px-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
               <div>
-                <span className="text-blue-700 font-bold uppercase tracking-widest text-sm mb-2 block">News & Updates</span>
+                <span className="font-bold uppercase tracking-widest text-sm mb-2 block" style={{ color: 'var(--color-msnc-royal, #097CDA)' }}>News & Updates</span>
                 <h2 className="text-4xl font-serif font-black text-slate-900">Latest Announcements</h2>
               </div>
               <Link 
                 href="/news" 
-                className="mt-4 md:mt-0 text-blue-700 font-bold hover:text-blue-800 transition-colors inline-flex items-center gap-2"
+                className="mt-4 md:mt-0 font-bold transition-colors inline-flex items-center gap-2 hover:opacity-80"
+                style={{ color: 'var(--color-msnc-royal, #097CDA)' }}
               >
                 View All News <ArrowRight className="h-4 w-4" />
               </Link>
@@ -218,10 +232,10 @@ export default async function HomePage() {
                     </div>
                   )}
                   <div className="p-6">
-                    <span className="text-blue-700 text-xs font-bold uppercase tracking-widest mb-2 block">
+                    <span className="text-xs font-bold uppercase tracking-widest mb-2 block" style={{ color: 'var(--color-msnc-royal, #097CDA)' }}>
                       {item.category}
                     </span>
-                    <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-blue-700 transition-colors line-clamp-2">
+                    <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:opacity-80 transition-colors line-clamp-2">
                       {item.title}
                     </h3>
                     <p className="text-slate-600 text-sm line-clamp-2">{item.summary}</p>
@@ -234,11 +248,14 @@ export default async function HomePage() {
       )}
 
       {/* Mission Statement */}
-      <section className="py-20 bg-blue-900 text-white">
+      <section 
+        className="py-20 text-white"
+        style={{ background: 'linear-gradient(135deg, var(--color-msnc-navy, #0E4977) 0%, var(--color-msnc-royal, #097CDA) 100%)' }}
+      >
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <span className="text-amber-400 font-bold uppercase tracking-widest text-sm mb-4 block">Our Mission</span>
-            <p className="text-xl md:text-2xl leading-relaxed text-blue-100">
+            <span className="font-bold uppercase tracking-widest text-sm mb-4 block" style={{ color: 'var(--color-msnc-yellow, #F7D116)' }}>Our Mission</span>
+            <p className="text-xl md:text-2xl leading-relaxed" style={{ color: 'var(--color-msnc-sky, #99C7F1)' }}>
               To support and uplift Mulenge youth in Canada and around the world through mentorship, 
               academic guidance, and leadership development, while fostering partnerships with organizations 
               that share common goals of education, empowerment, and community advancement.
@@ -259,14 +276,15 @@ export default async function HomePage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 
                 href="/subscribe" 
-                className="inline-flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800 text-white font-bold px-8 py-4 rounded-full text-lg transition-all shadow-lg"
+                className="inline-flex items-center justify-center gap-2 text-white font-bold px-8 py-4 rounded-full text-lg transition-all shadow-lg hover:opacity-90"
+                style={{ backgroundColor: 'var(--color-msnc-navy, #0E4977)' }}
               >
                 Become a Member
                 <ArrowRight className="h-5 w-5" />
               </Link>
               <Link 
                 href="/contact" 
-                className="inline-flex items-center justify-center gap-2 border-2 border-slate-300 hover:border-blue-700 text-slate-700 hover:text-blue-700 font-bold px-8 py-4 rounded-full text-lg transition-all"
+                className="inline-flex items-center justify-center gap-2 border-2 border-slate-300 text-slate-700 font-bold px-8 py-4 rounded-full text-lg transition-all hover:border-[var(--color-msnc-royal)]"
               >
                 Contact Us
               </Link>

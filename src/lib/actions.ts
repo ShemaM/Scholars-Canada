@@ -4,19 +4,58 @@ import { supabase } from './supabase';
 import { revalidatePath } from 'next/cache';
 
 // ============================================
+// CONSTANTS
+// ============================================
+
+const MAX_USER_INTERESTS = 10;
+const MAX_STRING_LENGTH = 1000;
+const MAX_NAME_LENGTH = 100;
+const MAX_EMAIL_LENGTH = 254;
+const MAX_PHONE_LENGTH = 20;
+
+// Database error codes
+const DB_ERROR_CODES = {
+  UNIQUE_VIOLATION: '23505',
+  TABLE_NOT_FOUND: '42P01',
+} as const;
+
+// ============================================
 // INPUT VALIDATION & SANITIZATION HELPERS
 // ============================================
 
 /**
  * Sanitize string input to prevent XSS attacks
- * Removes potentially harmful HTML/script tags
+ * Removes potentially harmful HTML/script tags and encodes special characters
  */
-function sanitizeString(input: string | undefined | null): string {
+function sanitizeString(input: string | undefined | null, maxLength = MAX_STRING_LENGTH): string {
   if (!input) return '';
   return input
     .trim()
-    .replace(/[<>]/g, '') // Remove angle brackets
-    .slice(0, 1000); // Limit length
+    .replace(/[<>'"&]/g, (char) => {
+      const entities: Record<string, string> = {
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;',
+        '&': '&amp;',
+      };
+      return entities[char] || char;
+    })
+    .replace(/javascript:/gi, '') // Remove javascript: protocol
+    .replace(/on\w+=/gi, '') // Remove event handlers like onclick=
+    .slice(0, maxLength);
+}
+
+/**
+ * Sanitize name - more restrictive than general strings
+ */
+function sanitizeName(input: string | undefined | null): string {
+  if (!input) return '';
+  // Allow only letters, spaces, hyphens, and apostrophes in names
+  return input
+    .trim()
+    .replace(/[^a-zA-ZÀ-ÿ\s'-]/g, '')
+    .slice(0, MAX_NAME_LENGTH);
 }
 
 /**
@@ -24,7 +63,7 @@ function sanitizeString(input: string | undefined | null): string {
  */
 function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email) && email.length <= 254;
+  return emailRegex.test(email) && email.length <= MAX_EMAIL_LENGTH;
 }
 
 /**
@@ -33,7 +72,7 @@ function isValidEmail(email: string): boolean {
 function sanitizePhone(phone: string | undefined | null): string | null {
   if (!phone) return null;
   // Remove non-numeric characters except + for international
-  const cleaned = phone.replace(/[^\d+\-() ]/g, '').slice(0, 20);
+  const cleaned = phone.replace(/[^\d+\-() ]/g, '').slice(0, MAX_PHONE_LENGTH);
   return cleaned || null;
 }
 
@@ -73,13 +112,13 @@ export async function registerMember(formData: {
     // Sanitize all inputs
     const sanitizedData = {
       email,
-      first_name: sanitizeString(formData.first_name) || null,
-      last_name: sanitizeString(formData.last_name) || null,
+      first_name: sanitizeName(formData.first_name) || null,
+      last_name: sanitizeName(formData.last_name) || null,
       phone: sanitizePhone(formData.phone),
-      city: sanitizeString(formData.city) || null,
-      province: sanitizeString(formData.province) || null,
+      city: sanitizeString(formData.city, MAX_NAME_LENGTH) || null,
+      province: sanitizeString(formData.province, MAX_NAME_LENGTH) || null,
       membership_type: formData.membership_type,
-      interests: (formData.interests || []).map(i => sanitizeString(i)).filter(Boolean).slice(0, 10),
+      interests: (formData.interests || []).map(i => sanitizeString(i, 50)).filter(Boolean).slice(0, MAX_USER_INTERESTS),
       is_active: true,
     };
 
@@ -89,7 +128,7 @@ export async function registerMember(formData: {
       .select();
 
     if (error) {
-      if (error.code === '23505') {
+      if (error.code === DB_ERROR_CODES.UNIQUE_VIOLATION) {
         return { error: 'This email is already registered.' };
       }
       throw error;

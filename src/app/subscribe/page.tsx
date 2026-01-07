@@ -124,7 +124,8 @@ export default function SubscribePage() {
       }
 
       setStatus('success');
-    } catch {
+    } catch (error) {
+      console.error('Registration failed:', error);
       setStatus('error');
       setErrorMessage('Something went wrong. Please try again.');
     }

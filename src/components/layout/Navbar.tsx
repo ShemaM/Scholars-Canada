@@ -4,13 +4,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Search, Menu, User, X, GraduationCap } from 'lucide-react';
-// Import the modal from the same directory (layout/)
 import SubscribeModal from './SubscribeModal';
 
 export function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  // New state for handling the modal
   const [isSubscribeOpen, setIsSubscribeOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
@@ -35,7 +33,13 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-blue-200 bg-white/80 backdrop-blur-md">
+      <header 
+        className="sticky top-0 z-50 w-full border-b backdrop-blur-md"
+        style={{ 
+          borderColor: 'var(--color-msnc-sky, #99C7F1)',
+          backgroundColor: 'rgba(255, 255, 255, 0.9)'
+        }}
+      >
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           
           {/* Left: Mobile Menu & Logo */}
@@ -49,10 +53,13 @@ export function Navbar() {
             </button>
             
             <Link href="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 bg-blue-700 rounded-sm flex items-center justify-center">
+              <div 
+                className="h-8 w-8 rounded-sm flex items-center justify-center"
+                style={{ backgroundColor: 'var(--color-msnc-navy, #0E4977)' }}
+              >
                 <GraduationCap className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xl font-bold font-serif tracking-tight hidden sm:block">MSNC</span>
+              <span className="text-xl font-bold font-serif tracking-tight hidden sm:block" style={{ color: 'var(--color-msnc-navy, #0E4977)' }}>MSNC</span>
             </Link>
           </div>
 
@@ -62,7 +69,10 @@ export function Navbar() {
               <Link 
                 key={link.href} 
                 href={link.href} 
-                className="hover:text-blue-700 transition-colors"
+                className="transition-colors hover:opacity-80"
+                style={{ color: 'var(--color-msnc-steel, #658CA9)' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-msnc-royal, #097CDA)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-msnc-steel, #658CA9)'}
               >
                 {link.name}
               </Link>
@@ -83,7 +93,7 @@ export function Navbar() {
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onBlur={() => !searchQuery && setIsSearchOpen(false)}
                       />
-                      <button type="button" aria-label="Close search" onClick={() => setIsSearchOpen(false)} className="p-1 text-slate-400 hover:text-blue-700">
+                      <button type="button" aria-label="Close search" onClick={() => setIsSearchOpen(false)} className="p-1 text-slate-400 hover:text-[var(--color-msnc-royal)]">
                         <X className="h-4 w-4" />
                       </button>
                    </form>
@@ -102,10 +112,11 @@ export function Navbar() {
               <User className="h-5 w-5" />
             </Link>
 
-            {/* UPDATED: Join Button triggers Modal */}
+            {/* Join Button triggers Modal */}
             <button 
               onClick={() => setIsSubscribeOpen(true)}
-              className="hidden sm:block ml-2 rounded-full bg-blue-700 px-6 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-blue-800 transition-colors"
+              className="hidden sm:block ml-2 rounded-full px-6 py-2 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:opacity-90"
+              style={{ backgroundColor: 'var(--color-msnc-navy, #0E4977)' }}
             >
               Join Us
             </button>
@@ -127,7 +138,14 @@ export function Navbar() {
                  {link.name}
                </Link>
              ))}
-             <Link href="/login" onClick={() => setIsMenuOpen(false)} className="text-blue-700 pt-4">Sign In</Link>
+             <Link 
+               href="/login" 
+               onClick={() => setIsMenuOpen(false)} 
+               className="pt-4"
+               style={{ color: 'var(--color-msnc-royal, #097CDA)' }}
+             >
+               Sign In
+             </Link>
            </nav>
         </div>
       )}

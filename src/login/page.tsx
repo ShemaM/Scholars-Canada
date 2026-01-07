@@ -2,36 +2,39 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-// 1. Import the database client
 import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, GraduationCap } from 'lucide-react';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
-  // 2. Initialize Supabase
   const [supabase] = useState(() => createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL as string, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string));
   
-  // 3. State to capture what the user types
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // 4. The Logic to run when "Sign In" is clicked
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault(); // Stop page refresh
+    e.preventDefault();
     setLoading(true);
     setErrorMsg(null);
 
+    // Basic input validation
+    if (!email.trim() || !password) {
+      setErrorMsg('Please enter both email and password.');
+      setLoading(false);
+      return;
+    }
+
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(),
         password,
       });
 
       if (error) throw error;
 
-      // Success! Refresh and redirect
       router.refresh(); 
       router.push('/admin');
 
@@ -50,13 +53,15 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-sm border border-slate-100">
         <div className="text-center">
-          <h2 className="mt-6 text-3xl font-black font-serif text-slate-900">Sign in</h2>
+          <div className="h-14 w-14 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <GraduationCap className="h-7 w-7 text-blue-700" />
+          </div>
+          <h2 className="text-3xl font-black font-serif text-slate-900">Admin Sign In</h2>
           <p className="mt-2 text-sm text-slate-600">
-            Access your saved articles and preferences
+            MSNC Administration Portal
           </p>
         </div>
 
-        {/* ERROR MESSAGE DISPLAY */}
         {errorMsg && (
           <div className="bg-red-50 text-red-600 p-3 rounded-lg flex items-center gap-2 text-sm font-bold">
             <AlertCircle size={16} />
@@ -67,31 +72,31 @@ export default function LoginPage() {
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           <div className="rounded-md shadow-sm space-y-4">
             <div>
-              <label htmlFor="email" className="sr-only">Email address</label>
+              <label htmlFor="email" className="block text-sm font-bold text-slate-700 mb-2">Email Address</label>
               <input 
                 id="email" 
                 name="email" 
                 type="email" 
+                autoComplete="email"
                 required 
-                // BINDING STATE
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none rounded-lg relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm" 
-                placeholder="Email address" 
+                className="appearance-none rounded-lg relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" 
+                placeholder="admin@msncanada.org" 
               />
             </div>
             <div>
-              <label htmlFor="password" className="sr-only">Password</label>
+              <label htmlFor="password" className="block text-sm font-bold text-slate-700 mb-2">Password</label>
               <input 
                 id="password" 
                 name="password" 
-                type="password" 
+                type="password"
+                autoComplete="current-password"
                 required 
-                // BINDING STATE
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none rounded-lg relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm" 
-                placeholder="Password" 
+                className="appearance-none rounded-lg relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-500 text-slate-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" 
+                placeholder="Enter your password" 
               />
             </div>
           </div>
@@ -100,22 +105,18 @@ export default function LoginPage() {
             <button 
               type="submit" 
               disabled={loading}
-              className="group relative w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent text-sm font-bold rounded-md text-white bg-slate-900 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent text-sm font-bold rounded-md text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loading && <Loader2 className="animate-spin h-4 w-4" />}
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
           
-          {/*<div className="flex items-center justify-between text-sm">
-            <Link href="/register" className="font-medium text-red-600 hover:text-red-500">
-              Create an account
+          <div className="text-center">
+            <Link href="/" className="text-sm text-slate-500 hover:text-blue-700 transition-colors">
+              ← Back to Home
             </Link>
-            <a href="#" className="font-medium text-slate-500 hover:text-slate-900">
-              Forgot password?
-            </a>
           </div>
-          */} 
         </form>
       </div>
     </div>

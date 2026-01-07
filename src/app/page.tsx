@@ -1,7 +1,18 @@
 import Link from 'next/link';
-import { GraduationCap, Users, BookOpen, Target, Heart, Handshake, ArrowRight } from 'lucide-react';
+import Image from 'next/image';
+import { GraduationCap, Users, BookOpen, Target, Heart, Handshake, ArrowRight, Calendar, MapPin, Clock } from 'lucide-react';
+import { getUpcomingEvents, getLatestAnnouncements } from '@/lib/actions';
+import { Event, SupabaseArticle } from '@/lib/definitions';
 
-export default function HomePage() {
+export const revalidate = 60; // Revalidate every minute
+
+export default async function HomePage() {
+  // Fetch dynamic data
+  const [events, announcements] = await Promise.all([
+    getUpcomingEvents(3),
+    getLatestAnnouncements(3),
+  ]);
+
   const objectives = [
     {
       icon: BookOpen,
@@ -113,6 +124,114 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Upcoming Events Section - Dynamic */}
+      {events && events.length > 0 && (
+        <section className="py-20 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
+              <div>
+                <span className="text-blue-700 font-bold uppercase tracking-widest text-sm mb-2 block">Stay Connected</span>
+                <h2 className="text-4xl font-serif font-black text-slate-900">Upcoming Events</h2>
+              </div>
+              <Link 
+                href="/events" 
+                className="mt-4 md:mt-0 text-blue-700 font-bold hover:text-blue-800 transition-colors inline-flex items-center gap-2"
+              >
+                View All Events <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {events.map((event: Event) => (
+                <Link 
+                  key={event.id} 
+                  href={`/events/${event.slug}`}
+                  className="group bg-slate-50 rounded-2xl overflow-hidden hover:shadow-lg transition-all border border-slate-100"
+                >
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 text-blue-700 text-sm font-bold mb-3">
+                      <Calendar className="h-4 w-4" />
+                      {new Date(event.event_date).toLocaleDateString('en-CA', { 
+                        month: 'long', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-blue-700 transition-colors">
+                      {event.title}
+                    </h3>
+                    <p className="text-slate-600 mb-4 line-clamp-2">{event.description}</p>
+                    <div className="flex items-center gap-4 text-sm text-slate-500">
+                      {event.event_time && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          {event.event_time}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
+                        {event.is_virtual ? 'Virtual' : event.location}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Latest Announcements - Dynamic */}
+      {announcements && announcements.length > 0 && (
+        <section className="py-20 bg-slate-50">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
+              <div>
+                <span className="text-blue-700 font-bold uppercase tracking-widest text-sm mb-2 block">News & Updates</span>
+                <h2 className="text-4xl font-serif font-black text-slate-900">Latest Announcements</h2>
+              </div>
+              <Link 
+                href="/news" 
+                className="mt-4 md:mt-0 text-blue-700 font-bold hover:text-blue-800 transition-colors inline-flex items-center gap-2"
+              >
+                View All News <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {announcements.map((item: SupabaseArticle) => (
+                <Link 
+                  key={item.id} 
+                  href={`/news/${item.slug}`}
+                  className="group bg-white rounded-2xl overflow-hidden hover:shadow-lg transition-all border border-slate-100"
+                >
+                  {item.image_url && (
+                    <div className="aspect-video bg-slate-200 relative overflow-hidden">
+                      <Image 
+                        src={item.image_url} 
+                        alt={item.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                      />
+                    </div>
+                  )}
+                  <div className="p-6">
+                    <span className="text-blue-700 text-xs font-bold uppercase tracking-widest mb-2 block">
+                      {item.category}
+                    </span>
+                    <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-blue-700 transition-colors line-clamp-2">
+                      {item.title}
+                    </h3>
+                    <p className="text-slate-600 text-sm line-clamp-2">{item.summary}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Mission Statement */}
       <section className="py-20 bg-blue-900 text-white">

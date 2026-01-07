@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 import { X, GraduationCap, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { DB_ERROR_CODES } from '@/lib/actions';
 
 interface SubscribeModalProps {
   isOpen: boolean;
@@ -49,18 +50,18 @@ export default function SubscribeModal({ isOpen, onClose }: SubscribeModalProps)
 
       if (error) {
         // If members table doesn't exist, try subscribers table
-        if (error.code === '42P01') {
+        if (error.code === DB_ERROR_CODES.TABLE_NOT_FOUND) {
           const { error: subError } = await supabase
             .from('subscribers')
             .insert([{ email }]);
           
           if (subError) {
-            if (subError.code === '23505') {
+            if (subError.code === DB_ERROR_CODES.UNIQUE_VIOLATION) {
               throw new Error('You are already registered!');
             }
             throw subError;
           }
-        } else if (error.code === '23505') {
+        } else if (error.code === DB_ERROR_CODES.UNIQUE_VIOLATION) {
           throw new Error('You are already registered!');
         } else {
           throw error;

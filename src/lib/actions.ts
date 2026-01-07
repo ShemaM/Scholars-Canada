@@ -13,8 +13,8 @@ const MAX_NAME_LENGTH = 100;
 const MAX_EMAIL_LENGTH = 254;
 const MAX_PHONE_LENGTH = 20;
 
-// Database error codes
-const DB_ERROR_CODES = {
+// Database error codes - exported for use in client components
+export const DB_ERROR_CODES = {
   UNIQUE_VIOLATION: '23505',
   TABLE_NOT_FOUND: '42P01',
 } as const;
@@ -29,21 +29,34 @@ const DB_ERROR_CODES = {
  */
 function sanitizeString(input: string | undefined | null, maxLength = MAX_STRING_LENGTH): string {
   if (!input) return '';
-  return input
-    .trim()
-    .replace(/[<>'"&]/g, (char) => {
-      const entities: Record<string, string> = {
-        '<': '&lt;',
-        '>': '&gt;',
-        "'": '&#39;',
-        '"': '&quot;',
-        '&': '&amp;',
-      };
-      return entities[char] || char;
-    })
-    .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/on\w+=/gi, '') // Remove event handlers like onclick=
-    .slice(0, maxLength);
+  
+  let sanitized = input.trim();
+  
+  // HTML entity encode special characters
+  sanitized = sanitized.replace(/[<>'"&]/g, (char) => {
+    const entities: Record<string, string> = {
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;',
+      '&': '&amp;',
+    };
+    return entities[char] || char;
+  });
+  
+  // Remove dangerous URL schemes (javascript, vbscript, data)
+  sanitized = sanitized.replace(/javascript\s*:/gi, '');
+  sanitized = sanitized.replace(/vbscript\s*:/gi, '');
+  sanitized = sanitized.replace(/data\s*:/gi, '');
+  
+  // Remove event handlers - use loop to catch repeated patterns
+  let prevLength;
+  do {
+    prevLength = sanitized.length;
+    sanitized = sanitized.replace(/on\w+\s*=/gi, '');
+  } while (sanitized.length !== prevLength);
+  
+  return sanitized.slice(0, maxLength);
 }
 
 /**
@@ -235,7 +248,7 @@ export async function registerForEvent(formData: {
       .select();
 
     if (error) {
-      if (error.code === '23505') {
+      if (error.code === DB_ERROR_CODES.UNIQUE_VIOLATION) {
         return { error: 'You are already registered for this event.' };
       }
       throw error;

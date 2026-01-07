@@ -20,16 +20,33 @@ export default function LoginPage() {
     setLoading(true);
     setErrorMsg(null);
 
-    // Basic input validation
-    if (!email.trim() || !password) {
+    // Input validation
+    const trimmedEmail = email.trim();
+    
+    if (!trimmedEmail || !password) {
       setErrorMsg('Please enter both email and password.');
+      setLoading(false);
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setErrorMsg('Please enter a valid email address.');
+      setLoading(false);
+      return;
+    }
+
+    // Password minimum length check
+    if (password.length < 6) {
+      setErrorMsg('Password must be at least 6 characters long.');
       setLoading(false);
       return;
     }
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email: trimmedEmail,
         password,
       });
 

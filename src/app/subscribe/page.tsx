@@ -106,15 +106,27 @@ export default function SubscribePage() {
     }));
   };
 
+  // Type guard for membership type validation
+  const isValidMembershipType = (type: string): type is 'student' | 'professional' | 'mentor' | 'supporter' => {
+    return ['student', 'professional', 'mentor', 'supporter'].includes(type);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('loading');
     setErrorMessage('');
 
+    // Validate membership type before submission
+    if (!isValidMembershipType(selectedType)) {
+      setStatus('error');
+      setErrorMessage('Please select a valid membership type.');
+      return;
+    }
+
     try {
       const result = await registerMember({
         ...formData,
-        membership_type: selectedType as 'student' | 'professional' | 'mentor' | 'supporter',
+        membership_type: selectedType,
       });
 
       if (result.error) {

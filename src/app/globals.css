@@ -1,11 +1,39 @@
 @import "tailwindcss";
 
-/* In v4, you define your theme variables directly in CSS 
-  if you want to override defaults.
-*/
+/* ============================================
+   MSNC Brand Colors
+   ============================================ */
 :root {
+  /* Primary Blues */
+  --color-navy: #0E4977;
+  --color-royal: #097CDA;
+  --color-steel: #658CA9;
+  --color-sky: #99C7F1;
+  
+  /* Accent Colors */
+  --color-red: #D6554F;
+  --color-red-bright: #C8102E;
+  --color-yellow: #F7D116;
+  --color-white: #F8F8F8;
+  
+  /* Font variables */
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui;
   --font-serif: var(--font-geist-mono), ui-serif, Georgia; 
+}
+
+/* ============================================
+   Tailwind v4 Theme Extensions
+   ============================================ */
+@theme {
+  /* MSNC Brand Colors */
+  --color-msnc-navy: #0E4977;
+  --color-msnc-royal: #097CDA;
+  --color-msnc-steel: #658CA9;
+  --color-msnc-sky: #99C7F1;
+  --color-msnc-red: #D6554F;
+  --color-msnc-red-bright: #C8102E;
+  --color-msnc-yellow: #F7D116;
+  --color-msnc-white: #F8F8F8;
 }
 
 /* Custom Utilities */

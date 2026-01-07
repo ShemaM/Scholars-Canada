@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-// FIX: Import the older function name
 import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
-import { X, Mail, CheckCircle, AlertCircle } from 'lucide-react';
+import { X, GraduationCap, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+import { DB_ERROR_CODES } from '@/lib/actions';
 
 interface SubscribeModalProps {
   isOpen: boolean;
@@ -11,7 +12,6 @@ interface SubscribeModalProps {
 }
 
 export default function SubscribeModal({ isOpen, onClose }: SubscribeModalProps) {
-  // Create Supabase client using public env variables
   const [supabase] = useState(() =>
     createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -20,6 +20,7 @@ export default function SubscribeModal({ isOpen, onClose }: SubscribeModalProps)
   );
   
   const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -37,19 +38,39 @@ export default function SubscribeModal({ isOpen, onClose }: SubscribeModalProps)
     }
 
     try {
+      // Try to insert into members table first, fall back to subscribers
       const { error } = await supabase
-        .from('subscribers')
-        .insert([{ email }]);
+        .from('members')
+        .insert([{ 
+          email,
+          first_name: firstName || null,
+          membership_type: 'supporter',
+          is_active: true,
+        }]);
 
       if (error) {
-        if (error.code === '23505') {
-          throw new Error('You are already subscribed!');
+        // If members table doesn't exist, try subscribers table
+        if (error.code === DB_ERROR_CODES.TABLE_NOT_FOUND) {
+          const { error: subError } = await supabase
+            .from('subscribers')
+            .insert([{ email }]);
+          
+          if (subError) {
+            if (subError.code === DB_ERROR_CODES.UNIQUE_VIOLATION) {
+              throw new Error('You are already registered!');
+            }
+            throw subError;
+          }
+        } else if (error.code === DB_ERROR_CODES.UNIQUE_VIOLATION) {
+          throw new Error('You are already registered!');
+        } else {
+          throw error;
         }
-        throw error;
       }
 
       setStatus('success');
       setEmail('');
+      setFirstName('');
       
       setTimeout(() => {
         onClose();
@@ -80,53 +101,83 @@ export default function SubscribeModal({ isOpen, onClose }: SubscribeModalProps)
         </button>
 
         <div className="text-center mb-6">
-          <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Mail size={24} />
+          <div className="w-12 h-12 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center mx-auto mb-4">
+            <GraduationCap size={24} />
           </div>
-          <h2 className="text-2xl font-bold font-serif text-slate-900">Join Capital News</h2>
-          <p className="text-slate-500 mt-2">Get the latest stories and breaking news delivered straight to your inbox.</p>
+          <h2 className="text-2xl font-bold font-serif text-slate-900">Join MSNC</h2>
+          <p className="text-slate-500 mt-2">
+            Become part of Mulenge Scholars&apos; Network Canada and access programs, events, and resources.
+          </p>
         </div>
 
         {status === 'success' ? (
           <div className="text-center py-6">
             <div className="text-green-500 mb-2 flex justify-center"><CheckCircle size={48} /></div>
-            <h3 className="text-xl font-bold text-slate-900">You&apos;re Subscribed!</h3>
+            <h3 className="text-xl font-bold text-slate-900">Welcome to MSNC!</h3>
             <p className="text-slate-500">Thank you for joining our community.</p>
           </div>
         ) : (
-          <form onSubmit={handleSubscribe} className="space-y-4">
-            <div>
-              <label htmlFor="sub-email" className="sr-only">Email Address</label>
-              <input
-                id="sub-email"
-                type="email"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:outline-none transition-all"
-                disabled={status === 'loading'}
-              />
-            </div>
-
-            {status === 'error' && (
-              <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
-                <AlertCircle size={16} />
-                <span>{errorMessage}</span>
+          <>
+            <form onSubmit={handleSubscribe} className="space-y-4">
+              <div>
+                <label htmlFor="modal-first-name" className="sr-only">First Name</label>
+                <input
+                  id="modal-first-name"
+                  type="text"
+                  placeholder="First name (optional)"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
+                  disabled={status === 'loading'}
+                />
               </div>
-            )}
+              <div>
+                <label htmlFor="modal-email" className="sr-only">Email Address</label>
+                <input
+                  id="modal-email"
+                  type="email"
+                  placeholder="Email address *"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
+                  disabled={status === 'loading'}
+                  required
+                />
+              </div>
 
-            <button
-              type="submit"
-              disabled={status === 'loading'}
-              className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-red-600 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {status === 'loading' ? 'Processing...' : 'Subscribe Now'}
-            </button>
-            
-            <p className="text-xs text-center text-slate-400 mt-4">
-              We respect your privacy. No spam, ever.
-            </p>
-          </form>
+              {status === 'error' && (
+                <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
+                  <AlertCircle size={16} />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={status === 'loading'}
+                className="w-full bg-blue-700 text-white py-4 rounded-xl font-bold hover:bg-blue-800 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {status === 'loading' ? 'Processing...' : 'Join Now'}
+              </button>
+              
+              <p className="text-xs text-center text-slate-400 mt-4">
+                We respect your privacy. No spam, ever.
+              </p>
+            </form>
+
+            <div className="mt-6 pt-6 border-t border-slate-200">
+              <p className="text-center text-sm text-slate-600 mb-3">
+                Want to learn more about membership options?
+              </p>
+              <Link 
+                href="/subscribe"
+                onClick={onClose}
+                className="flex items-center justify-center gap-2 text-blue-700 font-bold text-sm hover:text-blue-800 transition-colors"
+              >
+                View Full Membership Page <ArrowRight size={16} />
+              </Link>
+            </div>
+          </>
         )}
       </div>
     </div>

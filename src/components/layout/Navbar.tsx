@@ -3,26 +3,24 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, Menu, User, X } from 'lucide-react';
-// Import the modal from the same directory (layout/)
+import { Search, Menu, User, X, GraduationCap } from 'lucide-react';
 import SubscribeModal from './SubscribeModal';
 
 export function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  // New state for handling the modal
   const [isSubscribeOpen, setIsSubscribeOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
 
-  // Navigation Links based on lib/definitions.ts
+  // Navigation Links for MSNC
   const navLinks = [
-    { name: 'Politics', href: '/politics' },
-    { name: 'Human Rights', href: '/human-rights' },
-    { name: 'Diplomacy', href: '/diplomacy' },
-    { name: 'Business', href: '/business' },
-    { name: 'Tech', href: '/tech' },
-    { name: 'Exclusive', href: '/exclusive' },
+    { name: 'About', href: '/mission' },
+    { name: 'Programs', href: '/programs' },
+    { name: 'Team', href: '/team' },
+    { name: 'Resources', href: '/resources' },
+    { name: 'Events', href: '/events' },
+    { name: 'Contact', href: '/contact' },
   ];
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -35,7 +33,13 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
+      <header 
+        className="sticky top-0 z-50 w-full border-b backdrop-blur-md"
+        style={{ 
+          borderColor: 'var(--color-msnc-sky, #99C7F1)',
+          backgroundColor: 'rgba(255, 255, 255, 0.9)'
+        }}
+      >
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           
           {/* Left: Mobile Menu & Logo */}
@@ -49,10 +53,13 @@ export function Navbar() {
             </button>
             
             <Link href="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 bg-red-600 rounded-sm flex items-center justify-center">
-                <span className="text-white font-bold font-serif text-xl">C</span>
+              <div 
+                className="h-8 w-8 rounded-sm flex items-center justify-center"
+                style={{ backgroundColor: 'var(--color-msnc-navy, #0E4977)' }}
+              >
+                <GraduationCap className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xl font-bold font-serif tracking-tight hidden sm:block">Capital News</span>
+              <span className="text-xl font-bold font-serif tracking-tight hidden sm:block" style={{ color: 'var(--color-msnc-navy, #0E4977)' }}>MSNC</span>
             </Link>
           </div>
 
@@ -62,7 +69,10 @@ export function Navbar() {
               <Link 
                 key={link.href} 
                 href={link.href} 
-                className="hover:text-red-600 transition-colors"
+                className="transition-colors hover:opacity-80"
+                style={{ color: 'var(--color-msnc-steel, #658CA9)' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-msnc-royal, #097CDA)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-msnc-steel, #658CA9)'}
               >
                 {link.name}
               </Link>
@@ -77,13 +87,13 @@ export function Navbar() {
                       <input 
                         autoFocus
                         type="text" 
-                        placeholder="Search news..." 
+                        placeholder="Search..." 
                         className="flex-1 bg-transparent outline-none text-sm text-slate-700 placeholder:text-slate-400 font-sans"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onBlur={() => !searchQuery && setIsSearchOpen(false)}
                       />
-                      <button type="button" aria-label="Close search" onClick={() => setIsSearchOpen(false)} className="p-1 text-slate-400 hover:text-red-600">
+                      <button type="button" aria-label="Close search" onClick={() => setIsSearchOpen(false)} className="p-1 text-slate-400 hover:text-[var(--color-msnc-royal)]">
                         <X className="h-4 w-4" />
                       </button>
                    </form>
@@ -102,12 +112,13 @@ export function Navbar() {
               <User className="h-5 w-5" />
             </Link>
 
-            {/* UPDATED: Subscribe Button triggers Modal */}
+            {/* Join Button triggers Modal */}
             <button 
               onClick={() => setIsSubscribeOpen(true)}
-              className="hidden sm:block ml-2 rounded-full bg-slate-900 px-6 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-slate-800 transition-colors"
+              className="hidden sm:block ml-2 rounded-full px-6 py-2 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:opacity-90"
+              style={{ backgroundColor: 'var(--color-msnc-navy, #0E4977)' }}
             >
-              Subscribe
+              Join Us
             </button>
           </div>
         </div>
@@ -127,7 +138,14 @@ export function Navbar() {
                  {link.name}
                </Link>
              ))}
-             <Link href="/login" onClick={() => setIsMenuOpen(false)} className="text-red-600 pt-4">Sign In</Link>
+             <Link 
+               href="/login" 
+               onClick={() => setIsMenuOpen(false)} 
+               className="pt-4"
+               style={{ color: 'var(--color-msnc-royal, #097CDA)' }}
+             >
+               Sign In
+             </Link>
            </nav>
         </div>
       )}

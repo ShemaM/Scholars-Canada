@@ -509,7 +509,7 @@ export function permanentDeletePost(id: number) {
 
 export function createPost(post: Partial<SupabaseArticle>) {
   const newPost: SupabaseArticle = {
-    id: Math.max(...postsState.map(p => Number(p.id))) + 1,
+    id: Math.max(0, ...postsState.map(p => Number(p.id))) + 1,
     title: post.title || '',
     summary: post.summary || '',
     category: post.category || 'news',
@@ -576,7 +576,7 @@ export function addMember(member: Partial<Member>) {
     return { error: 'Email already registered', data: null };
   }
   const newMember: Member = {
-    id: Math.max(...membersState.map(m => Number(m.id))) + 1,
+    id: Math.max(0, ...membersState.map(m => Number(m.id))) + 1,
     email: member.email || '',
     first_name: member.first_name || null,
     last_name: member.last_name || null,
@@ -600,7 +600,7 @@ export function getCommentsForPost(postId: number) {
 
 export function addComment(postId: number, content: string, author: string) {
   const newComment: MockComment = {
-    id: String(Math.max(...commentsState.map(c => Number(c.id))) + 1),
+    id: String(Math.max(0, ...commentsState.map(c => Number(c.id))) + 1),
     content,
     user_id: 'mock-user',
     post_id: postId,

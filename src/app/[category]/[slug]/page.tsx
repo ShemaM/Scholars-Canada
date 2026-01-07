@@ -1,5 +1,5 @@
 // In your [slug]/page.tsx - FIXED VERSION
-import { supabase } from "@/lib/supabase";
+import { getPostBySlug, getCommentsForPost, mockSiteSettings } from "@/lib/mockdata";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, User } from "lucide-react";
 import Link from "next/link";
@@ -17,40 +17,18 @@ export default async function ArticlePage({
   const decodedCategory = decodeURIComponent(category);
   const categoryForQuery = decodedCategory.replace(/-/g, ' ');
 
-  // 1. Fetch the article
-  const { data: post, error } = await supabase
-    .from("posts")
-    .select("*")
-    .ilike("category", categoryForQuery)
-    .eq("slug", slug)
-    .single();
+  // 1. Fetch the article from mock data
+  const post = getPostBySlug(categoryForQuery, slug);
 
-  if (error || !post) {
+  if (!post) {
     return notFound();
   }
 
   // 2. Check if comments are enabled from site_settings
-  const { data: settings } = await supabase
-    .from("site_settings")
-    .select("public_comments")
-    .eq("id", 1)
-    .single();
+  const commentsEnabled = mockSiteSettings.public_comments;
 
-  const commentsEnabled = settings?.public_comments || false;
-
-  // 3. Fetch existing comments for this post WITH PROFILES
-  const { data: comments } = await supabase
-    .from("comments")
-    .select(`
-      *,
-      profiles (
-        full_name,
-        username,
-        avatar_url
-      )
-    `)
-    .eq("post_id", post.id) // Make sure this matches your posts.id type!
-    .order("created_at", { ascending: false });
+  // 3. Fetch existing comments for this post
+  const comments = getCommentsForPost(Number(post.id));
 
   return (
     <main className="min-h-screen bg-[#fcfcfc] py-12 font-serif">

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArticleCard } from '@/components/article/ArticleCard';
-import { supabase } from '@/lib/supabase';
+import { getPublishedPosts } from '@/lib/mockdata';
 import { SupabaseArticle } from '@/lib/definitions';
 
 export function LatestNews() {
@@ -11,22 +11,12 @@ export function LatestNews() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchLatestArticles() {
-      const { data } = await supabase
-        .from('posts')
-        .select('*')
-        .is('deleted_at', null)
-        .eq('is_published', true)
-        .order('created_at', { ascending: false })
-        .limit(8); // Show 8 latest articles
-
-      if (data) {
-        setArticles(data);
-      }
-      setLoading(false);
-    }
-
-    fetchLatestArticles();
+    // Use mock data
+    const publishedPosts = getPublishedPosts()
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 8);
+    setArticles(publishedPosts);
+    setLoading(false);
   }, []);
 
   if (loading) {

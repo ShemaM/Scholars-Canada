@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { supabase } from '@/lib/supabase';
+import { searchPosts } from '@/lib/mockdata';
 
 /** * FIX: This line tells Next.js that this page relies on user-provided 
  * search params and cannot be pre-rendered as a static HTML file. 
@@ -17,25 +17,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const resolvedParams = await searchParams;
   const query = resolvedParams.q || '';
 
-  // 2. Fetch data from Supabase
-  // We search both title and summary using case-insensitive ilike
-  const { data: results, error } = await supabase
-    .from('posts')
-    .select('*')
-    .or(`title.ilike.%${query}%,summary.ilike.%${query}%`)
-    .is('deleted_at', null)
-    .eq('is_published', true)
-    .order('created_at', { ascending: false });
-
-  // Handle Supabase connection or query errors
-  if (error) {
-    return (
-      <div className="p-20 text-center">
-        <h2 className="text-red-600 font-bold">Search Error</h2>
-        <p className="text-slate-500">{error.message}</p>
-      </div>
-    );
-  }
+  // 2. Search using mock data
+  const results = query ? searchPosts(query) : [];
 
   return (
     <main className="container mx-auto px-4 py-12 min-h-screen">

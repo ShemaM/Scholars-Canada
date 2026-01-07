@@ -1,14 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 import { Save, Shield, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { mockUser, mockSiteSettings } from '@/lib/mockdata';
 
 export default function SettingsPage() {
-  const [supabase] = useState(() => createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '', 
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-  ));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -24,62 +20,28 @@ export default function SettingsPage() {
     auto_publishing: true
   });
 
-  // Fetch Data on Load
+  // Fetch Data on Load (using mock data)
   useEffect(() => {
-    async function loadSettings() {
-      try {
-        setLoading(true);
-        
-        // A. Get User Profile
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (userError) {
-          console.error('Auth error:', userError);
-          throw userError;
-        }
-        
-        if (user) {
-          setProfile({
-            email: user.email || '',
-            displayName: user.user_metadata?.full_name || user.user_metadata?.display_name || ''
-          });
-        }
+    // Simulate loading
+    setLoading(true);
+    
+    // Use mock user
+    setProfile({
+      email: mockUser.email,
+      displayName: mockUser.user_metadata?.full_name || ''
+    });
 
-        // B. Get Site Settings
-        const { data: settings, error: settingsError } = await supabase
-          .from('site_settings')
-          .select('*')
-          .eq('id', 1)
-          .single();
-        
-        console.log('Settings data:', settings);
-        console.log('Settings error:', settingsError);
-        
-        if (settingsError) {
-          console.log('No settings found or table missing:', settingsError.message);
-          // Don't throw, just use defaults
-        } else if (settings) {
-          setToggles({
-            public_comments: settings.public_comments || false,
-            maintenance_mode: settings.maintenance_mode || false,
-            auto_publishing: settings.auto_publishing !== false // Default to true if undefined
-          });
-        }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (error: any) {
-        console.error('Error loading settings', error);
-        setMessage({ 
-          type: 'error', 
-          text: 'Failed to load settings' 
-        });
-      } finally {
-        setLoading(false);
-      }
-    }
+    // Use mock settings
+    setToggles({
+      public_comments: mockSiteSettings.public_comments,
+      maintenance_mode: mockSiteSettings.maintenance_mode,
+      auto_publishing: mockSiteSettings.auto_publishing
+    });
+    
+    setLoading(false);
+  }, []);
 
-    loadSettings();
-  }, [supabase]);
-
-  // Handle Profile Update - SIMPLIFIED version
+  // Handle Profile Update - Mock version
   const handleUpdateProfile = async () => {
     console.log('Update profile clicked');
     setSaving(true);
@@ -95,23 +57,10 @@ export default function SettingsPage() {
         throw new Error('Display name must be at least 2 characters');
       }
 
-      console.log('Updating profile:', profile);
+      console.log('Updating profile (mock):', profile);
       
-      // Update Supabase Auth User
-      const { error } = await supabase.auth.updateUser({
-        email: profile.email.trim(),
-        data: { 
-          full_name: profile.displayName.trim(),
-          display_name: profile.displayName.trim()
-        }
-      });
-
-      if (error) {
-        console.error('Supabase update error:', error);
-        throw error;
-      }
-      
-      console.log('Profile updated successfully');
+      // Mock: Just log the update (no actual persistence)
+      console.log('Profile updated successfully (mock)');
       
       setMessage({ 
         type: 'success', 
@@ -120,124 +69,43 @@ export default function SettingsPage() {
       
       // Clear success message after 3 seconds
       setTimeout(() => setMessage(null), 3000);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Update profile error:', error);
+      const err = error as { message?: string };
       setMessage({ 
         type: 'error', 
-        text: error.message || 'Failed to update profile' 
+        text: err.message || 'Failed to update profile' 
       });
     } finally {
       setSaving(false);
     }
   };
 
-  // Handle Toggle Switch
-  const handleToggleSetting = async (key: keyof typeof toggles) => {
+  // Handle Toggle Switch (Mock version)
+  const handleToggleSetting = (key: keyof typeof toggles) => {
     console.log('Toggle clicked:', key);
     const newValue = !toggles[key];
-    const originalValue = toggles[key];
     
     // Optimistic Update
     setToggles(prev => ({ ...prev, [key]: newValue }));
-
-    try {
-      console.log('Updating toggle in DB:', key, newValue);
-      
-      // First, check if row exists
-      const { data: existing } = await supabase
-        .from('site_settings')
-        .select('id')
-        .eq('id', 1)
-        .single();
-      
-      let result;
-      if (existing) {
-        // Update existing
-        result = await supabase
-          .from('site_settings')
-          .update({ 
-            [key]: newValue,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', 1);
-      } else {
-        // Insert new row
-        result = await supabase
-          .from('site_settings')
-          .insert({
-            id: 1,
-            public_comments: key === 'public_comments' ? newValue : false,
-            maintenance_mode: key === 'maintenance_mode' ? newValue : false,
-            auto_publishing: key === 'auto_publishing' ? newValue : true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
-      }
-      
-      if (result.error) {
-        console.error('Toggle update error:', result.error);
-        throw result.error;
-      }
-      
-      console.log('Toggle updated successfully');
-      
-      setMessage({
-        type: 'success',
-        text: `Setting updated successfully`
-      });
-      
-      setTimeout(() => setMessage(null), 2000);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      // Revert if failed
-      console.error('Failed to update toggle:', error);
-      setToggles(prev => ({ ...prev, [key]: originalValue }));
-      setMessage({ 
-        type: 'error', 
-        text: error.message || 'Failed to update setting' 
-      });
-    }
+    
+    // Mock: Just update local state (no persistence)
+    console.log('Toggle updated (mock):', key, newValue);
+    
+    setMessage({
+      type: 'success',
+      text: `Setting updated successfully`
+    });
+    
+    setTimeout(() => setMessage(null), 2000);
   };
 
-  // Test database connection
-  const testDB = async () => {
-    console.log('=== Testing Database Connection ===');
-    
-    try {
-      // Test 1: Check auth
-      const { data: authData } = await supabase.auth.getUser();
-      console.log('Auth user:', authData.user?.email);
-      
-      // Test 2: Check settings table
-      const { data: settings, error } = await supabase
-        .from('site_settings')
-        .select('*');
-      
-      console.log('Settings table exists?', !error);
-      console.log('Settings data:', settings);
-      console.log('Settings error:', error);
-      
-      if (error?.code === '42P01') {
-        console.log('ERROR: site_settings table does not exist!');
-        console.log('Run this SQL in Supabase SQL Editor:');
-        console.log(`
-          CREATE TABLE site_settings (
-            id SERIAL PRIMARY KEY,
-            public_comments BOOLEAN DEFAULT false,
-            maintenance_mode BOOLEAN DEFAULT false,
-            auto_publishing BOOLEAN DEFAULT true,
-            created_at TIMESTAMP DEFAULT NOW(),
-            updated_at TIMESTAMP DEFAULT NOW()
-          );
-          
-          INSERT INTO site_settings (id) VALUES (1);
-        `);
-      }
-      
-    } catch (err) {
-      console.error('Test failed:', err);
-    }
+  // Test database connection (Mock version)
+  const testDB = () => {
+    console.log('=== Testing Database Connection (Mock) ===');
+    console.log('Mock user:', mockUser.email);
+    console.log('Mock settings:', mockSiteSettings);
+    alert('Mock database test complete. Check console for details.');
   };
 
   if (loading) {

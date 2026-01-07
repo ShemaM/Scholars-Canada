@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { getDeletedPosts, restorePost, permanentDeletePost } from '@/lib/mockdata';
 import { RotateCcw, Trash2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
@@ -16,42 +16,31 @@ export default function TrashPage() {
   const [deletedPosts, setDeletedPosts] = useState<Post[]>([]);
 
   // 1. Fetch ONLY deleted posts
-  async function fetchDeletedPosts() {
-    const { data } = await supabase
-      .from('posts')
-      .select('*')
-      .not('deleted_at', 'is', null) // The logic is inverted here
-      .order('deleted_at', { ascending: false });
-    
-    if (data) setDeletedPosts(data);
+  function fetchDeletedPosts() {
+    const deleted = getDeletedPosts().map(p => ({
+      id: Number(p.id),
+      title: p.title,
+      category: p.category,
+      deleted_at: p.deleted_at || new Date().toISOString(),
+    }));
+    setDeletedPosts(deleted);
   }
 
   useEffect(() => {
-    (async () => {
-      await fetchDeletedPosts();
-    })();
+    fetchDeletedPosts();
   }, []);
 
   // 2. Restore Function (Sets deleted_at back to NULL)
-  const handleRestore = async (id: number) => {
-    const { error } = await supabase
-        .from('posts')
-        .update({ deleted_at: null })
-        .eq('id', id);
-    
-    if (!error) fetchDeletedPosts();
+  const handleRestore = (id: number) => {
+    restorePost(id);
+    fetchDeletedPosts();
   };
 
   // 3. Permanent Delete (Scary!)
-  const handlePermanentDelete = async (id: number) => {
+  const handlePermanentDelete = (id: number) => {
     if(!confirm("PERMANENT ACTION: This post will be gone forever. Continue?")) return;
-    
-    const { error } = await supabase
-        .from('posts')
-        .delete() // Actual SQL Delete
-        .eq('id', id);
-        
-    if (!error) fetchDeletedPosts();
+    permanentDeletePost(id);
+    fetchDeletedPosts();
   };
 
   return (

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 import { 
   LayoutDashboard, 
   PenTool, 
@@ -22,10 +21,6 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   
-  const [supabase] = useState(() => createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-  ));
   const [loading, setLoading] = useState(false);
 
   const navItems = [
@@ -39,11 +34,10 @@ export default function AdminSidebar() {
     { name: 'Settings', href: '/admin/settings', icon: <Settings size={20} /> },
   ];
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
     try {
       setLoading(true);
-      await supabase.auth.signOut();
-      router.refresh();
+      // Mock sign out - just redirect to login
       router.push('/login');
     } catch (error) {
       console.error('Logout failed:', error);

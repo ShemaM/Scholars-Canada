@@ -1,77 +1,13 @@
 import { Calendar, MapPin, Clock, Users, Video, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { mockEvents } from '@/lib/mockdata';
 import { Event } from '@/lib/definitions';
 
 export const revalidate = 60;
 
-// Sample events for display when database is empty
-const sampleEvents: Event[] = [
-  {
-    id: 1,
-    title: "Academic Success Workshop: Navigating Canadian Universities",
-    slug: "academic-success-workshop",
-    description: "Learn strategies for succeeding in Canadian post-secondary education, including study tips, resource navigation, and academic planning.",
-    content: "",
-    image_url: null,
-    event_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    event_time: "2:00 PM - 4:00 PM EST",
-    location: "Community Center, Toronto",
-    is_virtual: false,
-    virtual_link: null,
-    registration_url: null,
-    max_attendees: 50,
-    is_published: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 2,
-    title: "Career Networking Night",
-    slug: "career-networking-night",
-    description: "Connect with professionals from various industries and learn about career opportunities in Canada.",
-    content: "",
-    image_url: null,
-    event_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    event_time: "6:00 PM - 8:00 PM EST",
-    location: "Online",
-    is_virtual: true,
-    virtual_link: "https://zoom.us",
-    registration_url: null,
-    max_attendees: 100,
-    is_published: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 3,
-    title: "Leadership Development Seminar",
-    slug: "leadership-seminar",
-    description: "Develop essential leadership skills through interactive workshops and group activities.",
-    content: "",
-    image_url: null,
-    event_date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    event_time: "10:00 AM - 3:00 PM EST",
-    location: "University of Toronto, St. George Campus",
-    is_virtual: false,
-    virtual_link: null,
-    registration_url: null,
-    max_attendees: 30,
-    is_published: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
-
 export default async function EventsPage() {
-  // Fetch events from database
-  const { data: dbEvents } = await supabase
-    .from('events')
-    .select('*')
-    .eq('is_published', true)
-    .order('event_date', { ascending: true });
-
-  const events = dbEvents && dbEvents.length > 0 ? dbEvents : sampleEvents;
+  // Use mock events data
+  const events = mockEvents.filter(e => e.is_published);
   
   // Separate into upcoming and past events
   const today = new Date().toISOString().split('T')[0];

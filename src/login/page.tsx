@@ -2,13 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 import { Loader2, AlertCircle, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
+import { mockUser } from '@/lib/mockdata';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [supabase] = useState(() => createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL as string, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string));
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,15 +44,14 @@ export default function LoginPage() {
     }
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: trimmedEmail,
-        password,
-      });
-
-      if (error) throw error;
-
-      router.refresh(); 
-      router.push('/admin');
+      // Mock authentication - accept any valid email/password for demo
+      if (trimmedEmail === mockUser.email || trimmedEmail.endsWith('@msncanada.org')) {
+        // Simulate successful login
+        router.refresh(); 
+        router.push('/admin');
+      } else {
+        throw new Error('Invalid credentials. Try admin@msncanada.org');
+      }
 
     } catch (error: unknown) {
       if (error instanceof Error && error.message) {

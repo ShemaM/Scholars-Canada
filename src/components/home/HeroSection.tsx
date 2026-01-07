@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { getPublishedPosts } from '@/lib/mockdata';
 
 interface Article {
   id: number | string;
@@ -21,18 +21,12 @@ export function HeroSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchHero() {
-      const { data } = await supabase
-        .from('posts')
-        .select('*')
-        .is('deleted_at', null)
-        .eq('is_published', true)
-        .order('created_at', { ascending: false })
-        .limit(3);
-      if (data) setArticles(data);
-      setLoading(false);
-    }
-    fetchHero();
+    // Use mock data
+    const publishedPosts = getPublishedPosts()
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 3);
+    setArticles(publishedPosts);
+    setLoading(false);
   }, []);
 
   if (loading) return <div className="h-96 w-full bg-slate-100 animate-pulse rounded-2xl" />;

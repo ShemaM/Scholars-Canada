@@ -11,8 +11,8 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-serif" });
 
 export const metadata: Metadata = {
-  title: "Capital News",
-  description: "Your daily source for regional news.",
+  title: "Mulenge Scholars' Network Canada",
+  description: "Supporting and uplifting Mulenge youth in Canada through mentorship, academic guidance, and leadership development.",
 };
 
 export default function RootLayout({

@@ -2,8 +2,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 import { Send, User, Calendar, MessageSquare, Loader2 } from 'lucide-react';
+import { addComment as addCommentToMock, mockUser } from '@/lib/mockdata';
 
 interface Profile {
   full_name: string | null;
@@ -31,31 +31,20 @@ export default function CommentSection({
   initialComments = [],
   commentsEnabled 
 }: CommentSectionProps) {
-  const [supabase] = useState(() => createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '', 
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-  ));
-  
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<typeof mockUser | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [loading, setLoading] = useState(false);
 
-  // Load user session
+  // Load mock user session
   useEffect(() => {
-    async function loadUser() {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    }
-    
-    loadUser();
-  }, [supabase]);
+    // Simulate user being logged in with mock data
+    setUser(mockUser);
+  }, []);
 
-  // Submit new comment - FIXED
-  // In handleSubmitComment function, add more debugging:
+  // Submit new comment using mock data
 const handleSubmitComment = async (e: React.FormEvent) => {
   e.preventDefault();
   
@@ -72,49 +61,30 @@ const handleSubmitComment = async (e: React.FormEvent) => {
   setSubmitting(true);
   
   try {
-    console.log('User ID:', user.id);
-    console.log('Post ID:', parseInt(articleId));
-    
-    // Insert the comment
-    const commentData = {
-      content: newComment.trim(),
-      user_id: user.id,
-      post_id: parseInt(articleId),
-    };
-    
-    console.log('Inserting comment:', commentData);
-    
-    const { data: newCommentData, error } = await supabase
-      .from('comments')
-      .insert(commentData)
-      .select(`
-        *,
-        profiles (
-          full_name,
-          username,
-          avatar_url
-        )
-      `)
-      .single();
-    
-    if (error) {
-      console.error('Comment insert error details:', {
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint
-      });
-      throw error;
-    }
+    // Add comment using mock data
+    const newCommentData = addCommentToMock(
+      parseInt(articleId),
+      newComment.trim(),
+      user.user_metadata?.full_name || 'Anonymous'
+    );
     
     // Add to local state
-    setComments(prev => [newCommentData, ...prev]);
+    const commentForState: Comment = {
+      id: newCommentData.id,
+      content: newCommentData.content,
+      user_id: newCommentData.user_id,
+      post_id: newCommentData.post_id,
+      created_at: newCommentData.created_at,
+      profiles: newCommentData.profiles,
+    };
+    
+    setComments(prev => [commentForState, ...prev]);
     setNewComment('');
     
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    console.error('Full error submitting comment:', error);
-    alert(`Failed to post comment: ${error.message}\n\nCheck console for details.`);
+  } catch (error: unknown) {
+    console.error('Error submitting comment:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    alert(`Failed to post comment: ${message}`);
   } finally {
     setSubmitting(false);
   }
@@ -220,10 +190,10 @@ const handleSubmitComment = async (e: React.FormEvent) => {
           <div className="text-center py-6">
             <p className="text-slate-600 mb-4">Please sign in to leave a comment.</p>
             <button
-              onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })}
+              onClick={() => setUser(mockUser)}
               className="bg-red-600 text-white px-6 py-3 rounded-lg font-bold text-sm uppercase tracking-wide hover:bg-red-700 transition"
             >
-              Sign In to Comment
+              Sign In to Comment (Mock)
             </button>
           </div>
         )}

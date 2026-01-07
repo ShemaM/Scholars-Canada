@@ -1,6 +1,10 @@
-import { createClient } from '@supabase/supabase-js'
+// ============================================
+// SUPABASE CLIENT - DISABLED
+// This project now uses mock data instead of Supabase
+// See src/lib/mockdata.ts for the mock data implementation
+// ============================================
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// The supabase client has been removed.
+// All database operations now use mock data from mockdata.ts
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+export {};

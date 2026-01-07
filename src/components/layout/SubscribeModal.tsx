@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 import { X, GraduationCap, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import { DB_ERROR_CODES } from '@/lib/actions';
+import { addMember } from '@/lib/mockdata';
 
 interface SubscribeModalProps {
   isOpen: boolean;
@@ -12,13 +11,6 @@ interface SubscribeModalProps {
 }
 
 export default function SubscribeModal({ isOpen, onClose }: SubscribeModalProps) {
-  const [supabase] = useState(() =>
-    createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-    )
-  );
-  
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -38,34 +30,16 @@ export default function SubscribeModal({ isOpen, onClose }: SubscribeModalProps)
     }
 
     try {
-      // Try to insert into members table first, fall back to subscribers
-      const { error } = await supabase
-        .from('members')
-        .insert([{ 
-          email,
-          first_name: firstName || null,
-          membership_type: 'supporter',
-          is_active: true,
-        }]);
+      // Use mock data to add member
+      const result = addMember({ 
+        email,
+        first_name: firstName || null,
+        membership_type: 'supporter',
+        is_active: true,
+      });
 
-      if (error) {
-        // If members table doesn't exist, try subscribers table
-        if (error.code === DB_ERROR_CODES.TABLE_NOT_FOUND) {
-          const { error: subError } = await supabase
-            .from('subscribers')
-            .insert([{ email }]);
-          
-          if (subError) {
-            if (subError.code === DB_ERROR_CODES.UNIQUE_VIOLATION) {
-              throw new Error('You are already registered!');
-            }
-            throw subError;
-          }
-        } else if (error.code === DB_ERROR_CODES.UNIQUE_VIOLATION) {
-          throw new Error('You are already registered!');
-        } else {
-          throw error;
-        }
+      if (result.error) {
+        throw new Error('You are already registered!');
       }
 
       setStatus('success');

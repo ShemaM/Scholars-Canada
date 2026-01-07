@@ -1,18 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter, useParams } from 'next/navigation'; 
 import { ArrowLeft, Save, Loader2, UploadCloud, Globe, Lock, Bold, Italic, Quote, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { getPostById, updatePost } from '@/lib/mockdata';
 
 export default function EditPostPage() {
   const router = useRouter();
   const params = useParams(); 
-  const [supabase] = useState(() => createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-  ));
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -33,34 +29,32 @@ export default function EditPostPage() {
 
   // 1. FETCH DATA ON LOAD
   useEffect(() => {
-    const fetchPost = async () => {
+    const fetchPost = () => {
       try {
         // Validation: Ensure ID exists
         if (!params?.id) return;
 
         console.log("Fetching post ID:", params.id); // Debugging Log
 
-        const { data, error } = await supabase
-          .from('posts')
-          .select('*')
-          .eq('id', params.id)
-          .single();
+        const data = getPostById(params.id as string);
 
-        if (error) throw error;
-        
-        if (data) {
-          setFormData({
-            title: data.title || '',
-            slug: data.slug || '',
-            category: data.category || 'politics',
-            summary: data.summary || '',
-            content: data.content || '',
-            image_url: data.image_url || '',
-            subtitle: data.subtitle || '',
-            image_caption: data.image_caption || '',
-            is_published: data.is_published || false
-          });
+        if (!data) {
+          setFetchError('Post not found');
+          setLoading(false);
+          return;
         }
+        
+        setFormData({
+          title: data.title || '',
+          slug: data.slug || '',
+          category: data.category || 'politics',
+          summary: data.summary || '',
+          content: data.content || '',
+          image_url: data.image_url || '',
+          subtitle: '',
+          image_caption: data.image_caption || '',
+          is_published: data.is_published || false
+        });
       } catch (error: unknown) {
         console.error('Full Error Object:', error); // Log the real object to Console
         const err = error as { message?: string };
@@ -71,29 +65,19 @@ export default function EditPostPage() {
     };
 
     fetchPost();
-  }, [params.id, supabase]);
+  }, [params.id]);
 
-  // 2. HANDLE IMAGE UPLOAD
+  // 2. HANDLE IMAGE UPLOAD (Mock - just sets URL directly)
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       if (!e.target.files || e.target.files.length === 0) return;
       setUploading(true);
       
+      // Mock: Create a fake URL for the uploaded image
       const file = e.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+      const fakeUrl = `https://placehold.co/800x400?text=${encodeURIComponent(file.name)}`;
       
-      const { error: uploadError } = await supabase.storage
-        .from('post-images')
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from('post-images')
-        .getPublicUrl(fileName);
-
-      setFormData(prev => ({ ...prev, image_url: data.publicUrl }));
+      setFormData(prev => ({ ...prev, image_url: fakeUrl }));
     } catch (error: unknown) {
       const err = error as { message?: string };
       alert('Error uploading image: ' + (err.message ?? String(error)));
@@ -108,22 +92,16 @@ export default function EditPostPage() {
     setSaving(true);
     
     try {
-      const { error } = await supabase
-        .from('posts')
-        .update({
-          title: formData.title,
-          slug: formData.slug,
-          category: formData.category,
-          summary: formData.summary,
-          content: formData.content,
-          image_url: formData.image_url,
-          subtitle: formData.subtitle,
-          image_caption: formData.image_caption,
-          is_published: formData.is_published,
-        })
-        .eq('id', params.id);
-
-      if (error) throw error;
+      updatePost(params.id as string, {
+        title: formData.title,
+        slug: formData.slug,
+        category: formData.category,
+        summary: formData.summary,
+        content: formData.content,
+        image_url: formData.image_url || null,
+        image_caption: formData.image_caption,
+        is_published: formData.is_published,
+      });
 
       router.push('/admin/posts'); 
       router.refresh(); 

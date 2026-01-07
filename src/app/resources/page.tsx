@@ -1,85 +1,9 @@
 import { ExternalLink, FileText, Video, GraduationCap, Briefcase, Globe, BookOpen, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { mockResources } from '@/lib/mockdata';
 import { Resource } from '@/lib/definitions';
 
 export const revalidate = 60;
-
-// Sample resources for display when database is empty
-const sampleResources = [
-  {
-    id: 1,
-    title: "Ontario Student Assistance Program (OSAP)",
-    description: "Financial aid program for Ontario students attending post-secondary education. Includes grants and loans.",
-    category: 'scholarship',
-    resource_type: 'link',
-    url: "https://www.ontario.ca/page/osap-ontario-student-assistance-program",
-    file_url: null,
-    is_featured: true,
-    is_active: true,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 2,
-    title: "Canadian Universities Guide",
-    description: "Comprehensive guide to applying to Canadian universities, including admission requirements and deadlines.",
-    category: 'academic',
-    resource_type: 'link',
-    url: "https://www.universitystudy.ca/",
-    file_url: null,
-    is_featured: true,
-    is_active: true,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 3,
-    title: "Settlement Services for Newcomers",
-    description: "Information about settlement services available for newcomers to Canada, including language training and employment support.",
-    category: 'immigration',
-    resource_type: 'link',
-    url: "https://www.canada.ca/en/immigration-refugees-citizenship/services/new-immigrants.html",
-    file_url: null,
-    is_featured: true,
-    is_active: true,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 4,
-    title: "Resume Writing Tips for New Canadians",
-    description: "Best practices for crafting a Canadian-style resume that highlights your skills and experience.",
-    category: 'career',
-    resource_type: 'document',
-    url: "#",
-    file_url: null,
-    is_featured: false,
-    is_active: true,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 5,
-    title: "Scholarships Canada Database",
-    description: "Search thousands of scholarships available for students in Canada based on various criteria.",
-    category: 'scholarship',
-    resource_type: 'link',
-    url: "https://www.scholarshipscanada.com/",
-    file_url: null,
-    is_featured: true,
-    is_active: true,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 6,
-    title: "English Language Learning Resources",
-    description: "Free online resources for improving English language skills for academic and professional success.",
-    category: 'academic',
-    resource_type: 'link',
-    url: "https://www.canada.ca/en/immigration-refugees-citizenship/services/settle-canada/learn-english-french.html",
-    file_url: null,
-    is_featured: false,
-    is_active: true,
-    created_at: new Date().toISOString(),
-  },
-];
 
 const categoryIcons: Record<string, typeof GraduationCap> = {
   scholarship: GraduationCap,
@@ -98,15 +22,8 @@ const categoryColors: Record<string, string> = {
 };
 
 export default async function ResourcesPage() {
-  // Fetch resources from database
-  const { data: dbResources } = await supabase
-    .from('resources')
-    .select('*')
-    .eq('is_active', true)
-    .order('is_featured', { ascending: false })
-    .order('created_at', { ascending: false });
-
-  const resources = dbResources && dbResources.length > 0 ? dbResources : sampleResources;
+  // Use mock resources data
+  const resources = mockResources.filter(r => r.is_active);
   
   // Group resources by category
   const groupedResources = resources.reduce((acc: Record<string, Resource[]>, resource: Resource) => {

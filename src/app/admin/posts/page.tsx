@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { getPosts, deletePost as deletePostFromMock } from '@/lib/mockdata';
 import { Edit, Trash2, Globe, Lock, ArchiveRestore } from 'lucide-react';
 import Link from 'next/link';
 
@@ -19,25 +19,27 @@ export default function AllPostsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [filter, setFilter] = useState<'all' | 'published' | 'draft'>('all');
 
-  async function fetchPosts() {
-    const { data } = await supabase
-      .from('posts')
-      .select('*')
-      .is('deleted_at', null) // Only show active posts
-      .order('created_at', { ascending: false });
-    if (data) setPosts(data);
+  function fetchPosts() {
+    // Use mock data
+    const allPosts = getPosts().map(p => ({
+      id: Number(p.id),
+      title: p.title,
+      slug: p.slug,
+      category: p.category,
+      is_published: p.is_published,
+      created_at: p.created_at,
+      deleted_at: p.deleted_at,
+    }));
+    setPosts(allPosts);
   }
 
   useEffect(() => {
-    const load = async () => {
-      await fetchPosts();
-    };
-    void load();
+    fetchPosts();
   }, []);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = (id: number) => {
     if(!confirm("Are you sure? This moves the post to trash.")) return;
-    await supabase.from('posts').update({ deleted_at: new Date().toISOString() }).eq('id', id);
+    deletePostFromMock(id);
     fetchPosts(); 
   };
 

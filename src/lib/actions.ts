@@ -1,7 +1,17 @@
 'use server';
 
-import { supabase } from './supabase';
 import { revalidatePath } from 'next/cache';
+import {
+  getUpcomingEventsData,
+  getActivePrograms as getActiveProgramsData,
+  getFeaturedResourcesData,
+  mockTeamMembers,
+  getPublishedPosts,
+  addMember,
+  getCommentsForPost,
+  addComment as addCommentToMock,
+  likePostById,
+} from './mockdata';
 
 // ============================================
 // CONSTANTS
@@ -13,7 +23,7 @@ const MAX_NAME_LENGTH = 100;
 const MAX_EMAIL_LENGTH = 254;
 const MAX_PHONE_LENGTH = 20;
 
-// Database error codes - exported for use in client components
+// Database error codes - exported for use in client components (kept for backward compatibility)
 export const DB_ERROR_CODES = {
   UNIQUE_VIOLATION: '23505',
   TABLE_NOT_FOUND: '42P01',
@@ -135,20 +145,15 @@ export async function registerMember(formData: {
       is_active: true,
     };
 
-    const { data, error } = await supabase
-      .from('members')
-      .insert([sanitizedData])
-      .select();
+    // Use mock data operation
+    const result = addMember(sanitizedData);
 
-    if (error) {
-      if (error.code === DB_ERROR_CODES.UNIQUE_VIOLATION) {
-        return { error: 'This email is already registered.' };
-      }
-      throw error;
+    if (result.error) {
+      return { error: 'This email is already registered.' };
     }
 
     revalidatePath('/');
-    return { data, success: true };
+    return { data: result.data, success: true };
   } catch (error) {
     console.error('Error registering member:', error);
     return { error: 'Failed to register. Please try again.' };
@@ -188,20 +193,10 @@ export async function submitContactForm(formData: {
       return { error: 'Please provide a message (at least 10 characters).' };
     }
 
-    const { data, error } = await supabase
-      .from('contact_submissions')
-      .insert([{
-        name,
-        email,
-        subject,
-        message,
-        is_read: false,
-      }])
-      .select();
+    // Mock: Log the contact submission (in production, this would be saved)
+    console.log('Contact form submission (mock):', { name, email, subject, message });
 
-    if (error) throw error;
-
-    return { data, success: true };
+    return { data: { id: Date.now(), name, email, subject, message }, success: true };
   } catch (error) {
     console.error('Error submitting contact form:', error);
     return { error: 'Failed to send message. Please try again.' };
@@ -237,25 +232,11 @@ export async function registerForEvent(formData: {
       return { error: 'Invalid event.' };
     }
 
-    const { data, error } = await supabase
-      .from('event_registrations')
-      .insert([{
-        event_id: eventId,
-        name,
-        email,
-        phone,
-      }])
-      .select();
-
-    if (error) {
-      if (error.code === DB_ERROR_CODES.UNIQUE_VIOLATION) {
-        return { error: 'You are already registered for this event.' };
-      }
-      throw error;
-    }
+    // Mock: Log the event registration (in production, this would be saved)
+    console.log('Event registration (mock):', { event_id: eventId, name, email, phone });
 
     revalidatePath('/events');
-    return { data, success: true };
+    return { data: { id: Date.now(), event_id: eventId, name, email, phone }, success: true };
   } catch (error) {
     console.error('Error registering for event:', error);
     return { error: 'Failed to register. Please try again.' };
@@ -267,79 +248,25 @@ export async function registerForEvent(formData: {
 // ============================================
 
 export async function getUpcomingEvents(limit = 6) {
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .eq('is_published', true)
-    .gte('event_date', new Date().toISOString().split('T')[0])
-    .order('event_date', { ascending: true })
-    .limit(limit);
-
-  if (error) {
-    console.error('Error fetching events:', error);
-    return [];
-  }
-  return data || [];
+  return getUpcomingEventsData(limit);
 }
 
 export async function getActivePrograms() {
-  const { data, error } = await supabase
-    .from('programs')
-    .select('*')
-    .eq('is_active', true)
-    .order('order_index', { ascending: true });
-
-  if (error) {
-    console.error('Error fetching programs:', error);
-    return [];
-  }
-  return data || [];
+  return getActiveProgramsData();
 }
 
 export async function getFeaturedResources(limit = 6) {
-  const { data, error } = await supabase
-    .from('resources')
-    .select('*')
-    .eq('is_active', true)
-    .eq('is_featured', true)
-    .order('created_at', { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    console.error('Error fetching resources:', error);
-    return [];
-  }
-  return data || [];
+  return getFeaturedResourcesData(limit);
 }
 
 export async function getTeamMembers() {
-  const { data, error } = await supabase
-    .from('team_members')
-    .select('*')
-    .eq('is_active', true)
-    .order('order_index', { ascending: true });
-
-  if (error) {
-    console.error('Error fetching team members:', error);
-    return [];
-  }
-  return data || [];
+  return mockTeamMembers.filter(m => m.is_active);
 }
 
 export async function getLatestAnnouncements(limit = 4) {
-  const { data, error } = await supabase
-    .from('posts')
-    .select('*')
-    .is('deleted_at', null)
-    .eq('is_published', true)
-    .order('created_at', { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    console.error('Error fetching announcements:', error);
-    return [];
-  }
-  return data || [];
+  return getPublishedPosts()
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, limit);
 }
 
 // ============================================
@@ -347,31 +274,12 @@ export async function getLatestAnnouncements(limit = 4) {
 // ============================================
 
 export async function likeArticle(articleId: number) {
-  const { data, error } = await supabase
-    .from('posts')
-    .select('likes')
-    .eq('id', articleId)
-    .single();
-
-  if (error) {
-    console.error('Error fetching likes', error);
-    return { error: 'Could not fetch likes' };
-  }
-
-  const newLikes = (data.likes || 0) + 1;
-
-  const { error: updateError } = await supabase
-    .from('posts')
-    .update({ likes: newLikes })
-    .eq('id', articleId);
-
-  if (updateError) {
-    console.error('Error updating likes', updateError);
+  const result = likePostById(articleId);
+  if ('error' in result) {
     return { error: 'Could not update likes' };
   }
-
   revalidatePath('/');
-  return { likes: newLikes };
+  return { likes: result.likes };
 }
 
 interface Comment {
@@ -386,33 +294,25 @@ export async function addComment(articleId: number, comment: string, author: str
     return { error: 'Comment cannot be empty' };
   }
 
-  const { data, error } = await supabase
-    .from('comments')
-    .insert([
-      { post_id: articleId, content: comment, author: author || "Anonymous" },
-    ])
-    .select();
-
-  if (error) {
-    console.error('Error adding comment', error);
-    return { error: 'Could not add comment' };
-  }
+  const newComment = addCommentToMock(articleId, comment, author || "Anonymous");
   
   revalidatePath('/');
-  return { data };
+  return { data: [{
+    id: Number(newComment.id),
+    created_at: newComment.created_at,
+    content: newComment.content,
+    author: newComment.author,
+  }] };
 }
 
 export async function getComments(articleId: number): Promise<{ data?: Comment[] | null; error?: string | null; }> {
-    const { data, error } = await supabase
-        .from('comments')
-        .select('*')
-        .eq('post_id', articleId)
-        .order('created_at', { ascending: false });
-
-    if (error) {
-        console.error('Error fetching comments', error);
-        return { error: 'Could not fetch comments' };
-    }
-
-    return { data };
+  const comments = getCommentsForPost(articleId);
+  return {
+    data: comments.map(c => ({
+      id: Number(c.id),
+      created_at: c.created_at,
+      content: c.content,
+      author: c.author,
+    }))
+  };
 }

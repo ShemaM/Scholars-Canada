@@ -1,7 +1,12 @@
 'use client';
 
 import { useEffect, useState, type ReactNode } from 'react';
-import { supabase } from '@/lib/supabase';
+import { 
+  getPosts,
+  getMembers,
+  mockEvents,
+  mockPrograms,
+} from '@/lib/mockdata';
 import { 
   TrendingUp, Users, Calendar, 
   FileText, BookOpen, ArrowUpRight, ArrowDownRight,
@@ -20,42 +25,22 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
-    async function fetchData() {
-      // Fetch posts
-      const { data: posts } = await supabase
-        .from('posts')
-        .select('is_published, deleted_at')
-        .is('deleted_at', null);
-      
-      // Try to fetch members
-      const { data: members } = await supabase
-        .from('members')
-        .select('id')
-        .eq('is_active', true);
-      
-      // Try to fetch events
-      const { data: events } = await supabase
-        .from('events')
-        .select('id, event_date, is_published');
-      
-      // Try to fetch programs
-      const { data: programs } = await supabase
-        .from('programs')
-        .select('id')
-        .eq('is_active', true);
+    // Use mock data
+    const posts = getPosts();
+    const members = getMembers();
+    const events = mockEvents.filter(e => e.is_published);
+    const programs = mockPrograms.filter(p => p.is_active);
 
-      const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0];
 
-      setStats({
-        totalPosts: posts?.length || 0,
-        publishedPosts: posts?.filter(p => p.is_published).length || 0,
-        totalMembers: members?.length || 0,
-        totalEvents: events?.length || 0,
-        upcomingEvents: events?.filter(e => e.event_date >= today && e.is_published).length || 0,
-        totalPrograms: programs?.length || 0,
-      });
-    }
-    fetchData();
+    setStats({
+      totalPosts: posts.length,
+      publishedPosts: posts.filter(p => p.is_published).length,
+      totalMembers: members.length,
+      totalEvents: events.length,
+      upcomingEvents: events.filter(e => e.event_date >= today).length,
+      totalPrograms: programs.length,
+    });
   }, []);
 
   return (

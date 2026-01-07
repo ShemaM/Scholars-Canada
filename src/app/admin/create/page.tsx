@@ -1,22 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-// FIX 1: Use the function name compatible with your installed version
-import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Send, Save, Loader2, Bold, Italic, Quote, Globe, Lock, Image as ImageIcon, UploadCloud } from 'lucide-react';
 import Link from 'next/link';
+import { createPost, mockUser } from '@/lib/mockdata';
 
 export default function CreatePostPage() {
   const router = useRouter();
-  
-  // FIX 1: Initialize the client using the older naming convention and provide required env vars
-  const [supabase] = useState(() =>
-    createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-    )
-  );
   
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -46,23 +37,11 @@ export default function CreatePostPage() {
       setUploading(true);
       const file = e.target.files[0];
       
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-      const filePath = fileName;
+      // Mock: Create a placeholder URL for the uploaded image
+      const fakeUrl = `https://placehold.co/800x400?text=${encodeURIComponent(file.name)}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('post-images')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from('post-images')
-        .getPublicUrl(filePath);
-
-      setFormData(prev => ({ ...prev, image_url: data.publicUrl }));
+      setFormData(prev => ({ ...prev, image_url: fakeUrl }));
       
-    // FIX 2: Type 'error' as unknown instead of any
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown upload error';
       alert('Error uploading image: ' + message);
@@ -85,31 +64,24 @@ export default function CreatePostPage() {
     setLoading(true);
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error("Session expired. Please log in again.");
-      }
+      // Use mock user
+      const user = mockUser;
 
-      const { error } = await supabase.from('posts').insert([{
+      createPost({
         title: formData.title,
         slug: formData.slug,
         category: formData.category,
         summary: formData.summary,
         content: formData.content,
-        image_url: formData.image_url,
-        subtitle: formData.subtitle,
+        image_url: formData.image_url || null,
         image_caption: formData.image_caption,
         is_published: formData.is_published,
-        author_id: user.id
-      }]);
-
-      if (error) throw error;
+        author_name: user.user_metadata?.full_name || 'Admin',
+      });
 
       router.push('/admin'); 
       router.refresh(); 
       
-    // FIX 2: Type 'error' as unknown to satisfy TypeScript strict mode
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown database error';
       alert('Database Error: ' + message);

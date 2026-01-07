@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { getPostsByCategory } from "@/lib/mockdata";
 import { ArticleCard } from "@/components/article/ArticleCard";
 
 
@@ -14,17 +14,8 @@ export default async function CategoryPage({
   const { category } = await params;
   const decodedCategory = decodeURIComponent(category);
 
-  const { data: posts, error } = await supabase
-    .from("posts")
-    .select("*")
-    .ilike("category", decodedCategory)
-    .is("deleted_at", null)
-    .eq("is_published", true)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    return <div className="p-20 text-center text-red-600">Error: {error.message}</div>;
-  }
+  // Use mock data
+  const posts = getPostsByCategory(decodedCategory);
 
   return (
     <main className="min-h-screen bg-slate-50 py-12 font-serif">

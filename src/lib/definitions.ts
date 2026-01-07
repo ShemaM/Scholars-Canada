@@ -120,7 +120,7 @@ export interface Announcement {
   deleted_at: string | null;
 }
 
-// Legacy support for existing posts table
+// Legacy interface for posts/articles (previously from Supabase, now mock data)
 export interface SupabaseArticle {
   id: number | string;
   title: string;
